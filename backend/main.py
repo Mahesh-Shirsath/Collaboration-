@@ -27,7 +27,8 @@ db_client: Optional[AsyncIOMotorClient] = None
 database = None
 in_memory_storage = {
     "build_logs": [],
-    "generated_code": []
+    "generated_code": [],
+    "system_config": {}
 }
 
 @asynccontextmanager
@@ -127,6 +128,28 @@ class JenkinsJobRequest(BaseModel):
     config: Dict[str, Any]
     command: str
 
+class System(BaseModel):
+    id: str
+    name: str
+    ip: str
+    port: str
+    username: str
+    password: str
+    isActive: bool
+    isDefault: bool
+    lastConnected: Optional[str] = None
+    connectionStatus: str = "disconnected"
+
+class SystemConfig(BaseModel):
+    systems: List[System]
+    activeSystemId: Optional[str] = None
+
+class SystemConnectionTest(BaseModel):
+    ip: str
+    port: str
+    username: str
+    password: str
+
 # Helper functions for in-memory storage
 def generate_id():
     """Generate a simple ID for in-memory storage"""
@@ -162,17 +185,144 @@ def generated_code_to_response(code: dict) -> GeneratedCodeResponse:
 async def get_storage():
     return database if database else "memory"
 
-# Jenkins Integration endpoints
+# System Configuration endpoints
+@app.get("/api/system-config")
+async def get_system_config():
+    """Get current system configuration"""
+    try:
+        if database:
+            # Try to get from MongoDB
+            config_doc = await database.system_config.find_one({"type": "main"})
+            if config_doc and "config" in config_doc:
+                return config_doc["config"]
+        
+        # Fallback to in-memory storage
+        return in_memory_storage.get("system_config", {})
+    except Exception as e:
+        print(f"Error getting system config: {e}")
+        return in_memory_storage.get("system_config", {})
+
+@app.post("/api/system-config")
+async def save_system_config(config: SystemConfig):
+    """Save system configuration"""
+    try:
+        config_dict = config.dict()
+        
+        if database:
+            # Save to MongoDB
+            await database.system_config.update_one(
+                {"type": "main"},
+                {"$set": {"config": config_dict, "updated_at": datetime.utcnow()}},
+                upsert=True
+            )
+        
+        # Always save to in-memory storage as backup
+        in_memory_storage["system_config"] = config_dict
+        
+        # Update environment variables for system integration (use active system)
+        active_system = None
+        if config.activeSystemId:
+            active_system = next(
+                (system for system in config.systems if system.id == config.activeSystemId),
+                None
+            )
+        
+        if active_system:
+            os.environ["SYSTEM_IP"] = active_system.ip
+            os.environ["SYSTEM_PORT"] = active_system.port
+            os.environ["SYSTEM_USERNAME"] = active_system.username
+            os.environ["SYSTEM_PASSWORD"] = active_system.password
+        
+        return {"success": True, "message": "System configuration saved successfully"}
+    except Exception as e:
+        print(f"Error saving system config: {e}")
+        # Fallback to in-memory storage
+        in_memory_storage["system_config"] = config.dict()
+        return {"success": True, "message": "System configuration saved to memory"}
+
+# Connection test endpoint
+@app.post("/api/test-system")
+async def test_system_connection(config: SystemConnectionTest):
+    """Test system connection"""
+    try:
+        # Simulate connection test
+        await asyncio.sleep(2)
+        
+        if config.ip and config.username and config.password:
+            # In a real implementation, you would make an actual SSH connection test
+            # For now, we'll simulate a successful connection
+            return {"success": True, "message": "System connection successful"}
+        else:
+            return {"success": False, "message": "Missing required system configuration"}
+    except Exception as e:
+        return {"success": False, "message": f"System connection failed: {str(e)}"}
+
+# Jenkins Integration endpoints (updated to use system config)
 @app.post("/api/jenkins/trigger", response_model=dict)
 async def trigger_jenkins_job(job_request: JenkinsJobRequest):
-    """Trigger a Jenkins job via jenkins.py script"""
+    """Trigger a Jenkins job via jenkins.py script using active system"""
     try:
+        # Get system configuration for active system
+        system_config = {}
+        if database:
+            try:
+                config_doc = await database.system_config.find_one({"type": "main"})
+                if config_doc and "config" in config_doc:
+                    config_data = config_doc["config"]
+                    active_system_id = config_data.get("activeSystemId")
+                    if active_system_id:
+                        systems = config_data.get("systems", [])
+                        active_system = next(
+                            (system for system in systems if system["id"] == active_system_id),
+                            None
+                        )
+                        if active_system:
+                            system_config = {
+                                "ip": active_system["ip"],
+                                "port": active_system["port"],
+                                "username": active_system["username"],
+                                "password": active_system["password"]
+                            }
+            except Exception as e:
+                print(f"Error fetching system config: {e}")
+        
+        if not system_config:
+            # Fallback to in-memory storage
+            config_data = in_memory_storage.get("system_config", {})
+            active_system_id = config_data.get("activeSystemId")
+            if active_system_id:
+                systems = config_data.get("systems", [])
+                active_system = next(
+                    (system for system in systems if system["id"] == active_system_id),
+                    None
+                )
+                if active_system:
+                    system_config = {
+                        "ip": active_system["ip"],
+                        "port": active_system["port"],
+                        "username": active_system["username"],
+                        "password": active_system["password"]
+                    }
+        
+        # Use default values if no active system is configured
+        if not system_config:
+            system_config = {
+                "ip": "localhost",
+                "port": "22",
+                "username": "admin",
+                "password": ""
+            }
+        
         # Prepare data for jenkins.py script
         build_data = {
             "build_id": job_request.build_id,
             "job_type": job_request.job_type,
             "config": job_request.config,
-            "command": job_request.command
+            "command": job_request.command,
+            "system_ip": system_config["ip"],
+            "system_port": system_config["port"],
+            "system_username": system_config["username"],
+            "system_password": system_config["password"]
         }
         
         # Convert to JSON string for command line argument

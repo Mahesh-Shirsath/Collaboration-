@@ -1,6 +1,251 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
-// Add a helper function to check if API is available
+interface ApiResponse<T> {
+  data?: T
+  error?: string
+}
+
+interface BuildLog {
+  build_id: string
+  type: string
+  status: string
+  start_time: string
+  end_time?: string
+  config: any
+  command?: string
+  jenkins_job: string
+  output_log?: string
+}
+
+interface BuildLogResponse extends BuildLog {
+  id: string
+}
+
+interface GeneratedCode {
+  language: string
+  type: string
+  code: string
+  description: string
+  created_at: string
+}
+
+interface GeneratedCodeResponse extends GeneratedCode {
+  id: string
+}
+
+interface System {
+  id: string
+  name: string
+  ip: string
+  port: string
+  username: string
+  password: string
+  isActive: boolean
+  isDefault: boolean
+  lastConnected?: string
+  connectionStatus: "connected" | "disconnected" | "testing"
+}
+
+interface SystemConfig {
+  systems: System[]
+  activeSystemId: string | null
+}
+
+interface Stats {
+  build_logs: {
+    total: number
+    running: number
+    completed: number
+    failed: number
+    by_type: {
+      jtaf: number
+      floating: number
+      os_making: number
+    }
+  }
+  generated_code: {
+    total: number
+    limit: number
+  }
+}
+
+class ApiClient {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint}`
+
+    const config: RequestInit = {
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+      ...options,
+    }
+
+    try {
+      const response = await fetch(url, config)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`API request failed: ${endpoint}`, error)
+      throw error
+    }
+  }
+
+  // Health check
+  async healthCheck() {
+    return this.request<{ status: string; storage: string; timestamp: string }>("/health")
+  }
+
+  // System Configuration
+  async getSystemConfig(): Promise<SystemConfig> {
+    return this.request<SystemConfig>("/system-config")
+  }
+
+  async saveSystemConfig(config: SystemConfig): Promise<{ message: string }> {
+    return this.request<{ message: string }>("/system-config", {
+      method: "POST",
+      body: JSON.stringify(config),
+    })
+  }
+
+  // Connection test
+  async testSystemConnection(config: any): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>("/test-system", {
+      method: "POST",
+      body: JSON.stringify(config),
+    })
+  }
+
+  // Build logs
+  async getBuildLogs(params?: {
+    framework?: string
+    status?: string
+    limit?: number
+    offset?: number
+  }): Promise<BuildLog[]> {
+    const searchParams = new URLSearchParams()
+    if (params?.framework) searchParams.append("framework", params.framework)
+    if (params?.status) searchParams.append("status", params.status)
+    if (params?.limit) searchParams.append("limit", params.limit.toString())
+    if (params?.offset) searchParams.append("offset", params.offset.toString())
+
+    const query = searchParams.toString()
+    return this.request<BuildLog[]>(`/build-logs${query ? `?${query}` : ""}`)
+  }
+
+  async createBuildLog(log: Omit<BuildLog, "id" | "created_at" | "updated_at">): Promise<BuildLog> {
+    return this.request<BuildLog>("/build-logs", {
+      method: "POST",
+      body: JSON.stringify(log),
+    })
+  }
+
+  async updateBuildLog(id: string, updates: Partial<BuildLog>): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/build-logs/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(updates),
+    })
+  }
+
+  // Generated codes
+  async getGeneratedCodes(params?: {
+    limit?: number
+    offset?: number
+  }): Promise<GeneratedCode[]> {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append("limit", params.limit.toString())
+    if (params?.offset) searchParams.append("offset", params.offset.toString())
+
+    const query = searchParams.toString()
+    return this.request<GeneratedCode[]>(`/generated-code${query ? `?${query}` : ""}`)
+  }
+
+  async createGeneratedCode(code: Omit<GeneratedCode, "id" | "created_at">): Promise<GeneratedCode> {
+    return this.request<GeneratedCode>("/generated-code", {
+      method: "POST",
+      body: JSON.stringify(code),
+    })
+  }
+
+  async deleteGeneratedCode(id: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/generated-code/${id}`, {
+      method: "DELETE",
+    })
+  }
+
+  // Jenkins integration
+  async triggerJenkinsJob(jobData: Record<string, any>): Promise<{
+    success: boolean
+    output?: string
+    error?: string
+  }> {
+    return this.request<{
+      success: boolean
+      output?: string
+      error?: string
+    }>("/jenkins/trigger", {
+      method: "POST",
+      body: JSON.stringify(jobData),
+    })
+  }
+
+  // Statistics
+  async getStats(): Promise<Stats> {
+    return this.request<Stats>("/stats")
+  }
+}
+
+export const api = new ApiClient()
+
+// Fallback functions for when API is unavailable
+export const fallbackStorage = {
+  getSystemConfig: (): SystemConfig | null => {
+    const config = localStorage.getItem("systemConfig")
+    return config ? JSON.parse(config) : null
+  },
+
+  saveSystemConfig: (config: SystemConfig): void => {
+    localStorage.setItem("systemConfig", JSON.stringify(config))
+  },
+
+  getBuildLogs: (): BuildLog[] => {
+    const logs = localStorage.getItem("buildLogs")
+    return logs ? JSON.parse(logs) : []
+  },
+
+  saveBuildLog: (log: BuildLog): void => {
+    const logs = fallbackStorage.getBuildLogs()
+    logs.push(log)
+    localStorage.setItem("buildLogs", JSON.stringify(logs))
+  },
+
+  getGeneratedCodes: (): GeneratedCode[] => {
+    const codes = localStorage.getItem("generatedCodes")
+    return codes ? JSON.parse(codes) : []
+  },
+
+  saveGeneratedCode: (code: GeneratedCode): void => {
+    const codes = fallbackStorage.getGeneratedCodes()
+    codes.push(code)
+    // Limit to 10 entries
+    if (codes.length > 10) {
+      codes.splice(0, codes.length - 10)
+    }
+    localStorage.setItem("generatedCodes", JSON.stringify(codes))
+  },
+
+  deleteGeneratedCode: (id: string): void => {
+    const codes = fallbackStorage.getGeneratedCodes()
+    const filtered = codes.filter((code) => code.id !== id)
+    localStorage.setItem("generatedCodes", JSON.stringify(filtered))
+  },
+}
+
+// Helper function to check if API is available
 async function checkApiHealth(): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/health`, {
@@ -14,22 +259,6 @@ async function checkApiHealth(): Promise<boolean> {
 }
 
 // Build Logs API
-export interface BuildLog {
-  build_id: string
-  type: string
-  status: string
-  start_time: string
-  end_time?: string
-  config: any
-  command?: string
-  jenkins_job: string
-  output_log?: string
-}
-
-export interface BuildLogResponse extends BuildLog {
-  id: string
-}
-
 export const buildLogsApi = {
   async create(buildLog: Omit<BuildLog, "id">): Promise<{ id: string; message: string }> {
     const isApiAvailable = await checkApiHealth()
@@ -162,18 +391,6 @@ export const buildLogsApi = {
 }
 
 // Generated Code API
-export interface GeneratedCode {
-  language: string
-  type: string
-  code: string
-  description: string
-  created_at: string
-}
-
-export interface GeneratedCodeResponse extends GeneratedCode {
-  id: string
-}
-
 export const generatedCodeApi = {
   async create(code: Omit<GeneratedCode, "id" | "created_at">): Promise<{ id: string; message: string }> {
     const isApiAvailable = await checkApiHealth()
@@ -268,24 +485,6 @@ export const generatedCodeApi = {
 }
 
 // Stats API
-export interface Stats {
-  build_logs: {
-    total: number
-    running: number
-    completed: number
-    failed: number
-    by_type: {
-      jtaf: number
-      floating: number
-      os_making: number
-    }
-  }
-  generated_code: {
-    total: number
-    limit: number
-  }
-}
-
 export const statsApi = {
   async get(): Promise<Stats> {
     const isApiAvailable = await checkApiHealth()
@@ -315,6 +514,41 @@ export const statsApi = {
 
     const response = await fetch(`${API_BASE_URL}/stats`)
     if (!response.ok) throw new Error("Failed to fetch stats")
+    return response.json()
+  },
+}
+
+// Jenkins API
+export const jenkinsApi = {
+  async trigger(jobRequest: {
+    build_id: string
+    job_type: string
+    config: any
+    command: string
+  }): Promise<{ success: boolean; message: string; jenkins_result?: any; build_id: string }> {
+    const isApiAvailable = await checkApiHealth()
+    if (!isApiAvailable) {
+      // Simulate Jenkins trigger for offline mode
+      return {
+        success: true,
+        message: "Jenkins job triggered (offline simulation)",
+        build_id: jobRequest.build_id,
+        jenkins_result: {
+          success: true,
+          job_name: `${jobRequest.job_type.toLowerCase().replace(" ", "-")}-pipeline`,
+          queue_id: `queue-${Date.now()}`,
+          build_number: `build-${Date.now()}`,
+          message: "Simulated Jenkins job trigger",
+        },
+      }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/jenkins/trigger`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(jobRequest),
+    })
+    if (!response.ok) throw new Error("Failed to trigger Jenkins job")
     return response.json()
   },
 }

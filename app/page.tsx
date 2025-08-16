@@ -1,218 +1,294 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Code, Zap, Settings, Wrench, Sparkles, Activity } from "lucide-react"
 import Link from "next/link"
+import { Code, Cog, Database, GitBranch, Layers, Play, Settings, Zap, Server, Shield, Bell } from "lucide-react"
 
 export default function HomePage() {
-  const frameworks = [
-    {
-      id: "jtaf",
-      title: "JTAF Framework",
-      description: "Java Test Automation Framework for comprehensive testing solutions",
-      icon: Settings,
-      color: "blue",
-      href: "/frameworks/jtaf",
-      features: ["Test Execution", "Parallel Processing", "Advanced Reporting"],
-    },
-    {
-      id: "floating",
-      title: "Floating Framework",
-      description: "Lightweight and flexible framework for dynamic task execution",
-      icon: Zap,
-      color: "purple",
-      href: "/frameworks/floating",
-      features: ["Dynamic Loading", "Resource Optimization", "Cloud Integration"],
-    },
-    {
-      id: "os-making",
-      title: "OS Making",
-      description: "Automated OS image creation and deployment via Jenkins pipeline",
-      icon: Wrench,
-      color: "green",
-      href: "/os-making",
-      features: ["Jenkins Integration", "Automated Builds", "Image Deployment"],
-    },
-    {
-      id: "code-generation",
-      title: "Code Generation",
-      description: "AI-powered code generation for multiple programming languages",
-      icon: Sparkles,
-      color: "orange",
-      href: "/code-generation",
-      features: ["Multi-language Support", "Template Generation", "Best Practices"],
-    },
-    {
-      id: "pipeline-tracker",
-      title: "Pipeline Tracker",
-      description: "Monitor and track all Jenkins pipeline executions across frameworks",
-      icon: Activity,
-      color: "indigo",
-      href: "/pipelines",
-      features: ["Real-time Monitoring", "Execution History", "Status Tracking"],
-    },
-  ]
-
-  const getColorClasses = (color: string) => {
-    const colors = {
-      blue: {
-        bg: "bg-blue-100",
-        text: "text-blue-600",
-        border: "hover:border-blue-200",
-        badge: "bg-blue-50 text-blue-700",
-      },
-      purple: {
-        bg: "bg-purple-100",
-        text: "text-purple-600",
-        border: "hover:border-purple-200",
-        badge: "bg-purple-50 text-purple-700",
-      },
-      green: {
-        bg: "bg-green-100",
-        text: "text-green-600",
-        border: "hover:border-green-200",
-        badge: "bg-green-50 text-green-700",
-      },
-      orange: {
-        bg: "bg-orange-100",
-        text: "text-orange-600",
-        border: "hover:border-orange-200",
-        badge: "bg-orange-50 text-orange-700",
-      },
-      indigo: {
-        bg: "bg-indigo-100",
-        text: "text-indigo-600",
-        border: "hover:border-indigo-200",
-        badge: "bg-indigo-50 text-indigo-700",
-      },
-    }
-    return colors[color as keyof typeof colors] || colors.blue
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Code className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Framework Hub</h1>
-                <p className="text-sm text-gray-600">Development Solutions Platform</p>
-              </div>
-            </Link>
-            <Badge variant="secondary" className="bg-green-100 text-green-800">
-              <Zap className="w-3 h-3 mr-1" />
-              Active
-            </Badge>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-6 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Choose Your{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Development Solution
-            </span>
-          </h2>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Framework Solution Platform</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Access powerful frameworks, automated OS creation, and AI-powered code generation tools. Select a solution
-            below to get started with your development workflow.
+            Streamline your development workflow with automated framework execution, code generation, and Jenkins
+            integration
           </p>
         </div>
 
-        {/* Framework Cards Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-          {frameworks.map((framework) => {
-            const colorClasses = getColorClasses(framework.color)
-            const IconComponent = framework.icon
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* JTAF Framework */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Layers className="h-6 w-6 text-blue-600" />
+                  <CardTitle>JTAF Framework</CardTitle>
+                </div>
+                <Badge variant="secondary">Framework</Badge>
+              </div>
+              <CardDescription>
+                Java Test Automation Framework with parameter configuration and execution
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Play className="h-4 w-4 mr-2" />
+                  Execute test suites with custom parameters
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Jenkins pipeline integration
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Database className="h-4 w-4 mr-2" />
+                  Build tracking and logging
+                </div>
+                <Link href="/frameworks/jtaf">
+                  <Button className="w-full mt-4">
+                    <Cog className="h-4 w-4 mr-2" />
+                    Configure & Execute
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
-            return (
-              <Link key={framework.id} href={framework.href}>
-                <Card
-                  className={`h-full border-2 ${colorClasses.border} transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer group`}
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className={`w-12 h-12 ${colorClasses.bg} rounded-xl flex items-center justify-center mb-4`}>
-                        <IconComponent className={`w-6 h-6 ${colorClasses.text}`} />
-                      </div>
-                      <Badge variant="outline" className={`${colorClasses.badge} border-0`}>
-                        Ready
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
-                      {framework.title}
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 text-base leading-relaxed">
-                      {framework.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Key Features</h4>
-                      <div className="space-y-2">
-                        {framework.features.map((feature, index) => (
-                          <div key={index} className="flex items-center text-sm text-gray-600">
-                            <div className={`w-1.5 h-1.5 ${colorClasses.bg} rounded-full mr-3`}></div>
-                            {feature}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="mt-6 pt-4 border-t border-gray-100">
-                      <div className={`text-sm font-medium ${colorClasses.text} group-hover:underline`}>
-                        Access Framework →
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
+          {/* Floating Framework */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-6 w-6 text-green-600" />
+                  <CardTitle>Floating Framework</CardTitle>
+                </div>
+                <Badge variant="secondary">Framework</Badge>
+              </div>
+              <CardDescription>Lightweight framework for rapid development and deployment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Play className="h-4 w-4 mr-2" />
+                  Quick setup and execution
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Automated build pipeline
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Database className="h-4 w-4 mr-2" />
+                  Real-time monitoring
+                </div>
+                <Link href="/frameworks/floating">
+                  <Button className="w-full mt-4">
+                    <Cog className="h-4 w-4 mr-2" />
+                    Configure & Execute
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* OS Making */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Server className="h-6 w-6 text-purple-600" />
+                  <CardTitle>OS Making</CardTitle>
+                </div>
+                <Badge variant="secondary">Pipeline</Badge>
+              </div>
+              <CardDescription>Operating system build and deployment pipeline</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Play className="h-4 w-4 mr-2" />
+                  Automated OS build process
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Jenkins pipeline execution
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Database className="h-4 w-4 mr-2" />
+                  Build artifact management
+                </div>
+                <Link href="/os-making">
+                  <Button className="w-full mt-4">
+                    <Cog className="h-4 w-4 mr-2" />
+                    Start Build Process
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Code Generation */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Code className="h-6 w-6 text-orange-600" />
+                  <CardTitle>Code Generation</CardTitle>
+                </div>
+                <Badge variant="secondary">AI Tool</Badge>
+              </div>
+              <CardDescription>AI-powered code generation with React-based chatbot interface</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Code className="h-4 w-4 mr-2" />
+                  Generate code snippets
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Zap className="h-4 w-4 mr-2" />
+                  Interactive chat interface
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Database className="h-4 w-4 mr-2" />
+                  Code history management
+                </div>
+                <Link href="/code-generation">
+                  <Button className="w-full mt-4">
+                    <Code className="h-4 w-4 mr-2" />
+                    Generate Code
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pipeline Tracker */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <GitBranch className="h-6 w-6 text-indigo-600" />
+                  <CardTitle>Pipeline Tracker</CardTitle>
+                </div>
+                <Badge variant="secondary">Monitor</Badge>
+              </div>
+              <CardDescription>Monitor and track all Jenkins pipeline executions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Real-time pipeline status
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Database className="h-4 w-4 mr-2" />
+                  Build history and logs
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Play className="h-4 w-4 mr-2" />
+                  Pipeline management
+                </div>
+                <Link href="/pipelines">
+                  <Button className="w-full mt-4">
+                    <GitBranch className="h-4 w-4 mr-2" />
+                    View Pipelines
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* System Configuration */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Settings className="h-6 w-6 text-red-600" />
+                  <CardTitle>System Configuration</CardTitle>
+                </div>
+                <Badge variant="secondary">Settings</Badge>
+              </div>
+              <CardDescription>Configure Jenkins, database, and system settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Server className="h-4 w-4 mr-2" />
+                  Jenkins server settings
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Security configuration
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Bell className="h-4 w-4 mr-2" />
+                  Notification settings
+                </div>
+                <Link href="/system-config">
+                  <Button className="w-full mt-4">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configure System
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-5 gap-6 max-w-5xl mx-auto">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900 mb-1">2</div>
-            <div className="text-sm text-gray-600">Testing Frameworks</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900 mb-1">1</div>
-            <div className="text-sm text-gray-600">OS Builder</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900 mb-1">1</div>
-            <div className="text-sm text-gray-600">AI Code Generator</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900 mb-1">1</div>
-            <div className="text-sm text-gray-600">Pipeline Tracker</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900 mb-1">24/7</div>
-            <div className="text-sm text-gray-600">Availability</div>
-          </div>
-        </div>
-      </main>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <GitBranch className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Active Pipelines</p>
+                  <p className="text-2xl font-bold text-gray-900">3</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Footer */}
-      <footer className="border-t bg-white/80 backdrop-blur-sm mt-16">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-gray-600">
-            <p>&copy; 2024 Framework Hub. Built for efficient development workflows.</p>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Code className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Generated Codes</p>
+                  <p className="text-2xl font-bold text-gray-900">12</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Play className="h-8 w-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Successful Builds</p>
+                  <p className="text-2xl font-bold text-gray-900">45</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Server className="h-8 w-8 text-orange-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">System Status</p>
+                  <p className="text-2xl font-bold text-green-600">Online</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </footer>
+      </div>
     </div>
   )
 }
